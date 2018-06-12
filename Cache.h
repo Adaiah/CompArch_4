@@ -9,7 +9,6 @@
 class cache
 {
 public:
-	static int level;
 	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc);
 	~cache();
 	unsigned get_miss() const;
@@ -28,11 +27,9 @@ private:
 	unsigned Assoc_;
 	int miss_;
 	char writing_policy_;
-	int level_;
 	int time_;
 	double numOfAccess_;
 	std::vector<Cache_set> sets;
 };
-int level = 0;
 
 #endif // !Cache.h

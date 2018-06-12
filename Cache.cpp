@@ -11,7 +11,6 @@
 cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc) :
 	cache_size_(Csize), cache_cycle_(cache_cyc),Bsize_(Bsize), Assoc_(Assoc), miss_(0),
 	writing_policy_(WrAlloc), time_(0), numOfAccess_(0) {
-	level_ = level++;
 	for (int i=0; i<cache_size_;i++)
 	{
 		Cache_set enter= Cache_set(Assoc);
@@ -55,6 +54,7 @@ bool cache::Write2Cache(unsigned address)
 */
 bool cache::ReadCache(unsigned address){
 	
+	
 }
 
 
@@ -81,7 +81,7 @@ int cache:: gettime()const
 
 /* Name: calc_set
    Descriptioin: calculates set of a certain address for writing/reading
-   parameters: addres
+   parameters: address
    return value: set
 */
 unsigned cache::calc_set(unsigned address){
@@ -91,7 +91,7 @@ unsigned cache::calc_set(unsigned address){
 
 /* Name: calc_tag
    Descriptioin: calculates tag of a certain address for writing/reading
-   parameters: addres
+   parameters: address
    return value: tag
 */
 unsigned cache::calc_tag(unsigned address)
