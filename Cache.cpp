@@ -9,8 +9,8 @@
 	return value: none
 */
 cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc) :
-	cache_size_(Csize), cache_cycle(cache_cyc),Bsize_(Bsize), Assoc_(Assoc), miss_(0),
-	writing_policy_(WrAlloc), time_(0), numOfAccess(0) {
+	cache_size_(Csize), cache_cycle_(cache_cyc),Bsize_(Bsize), Assoc_(Assoc), miss_(0),
+	writing_policy_(WrAlloc), time_(0), numOfAccess_(0) {
 	level_ = level++;
 	for (int i=0; i<cache_size_;i++)
 	{
@@ -43,14 +43,19 @@ return miss_;
    return value: true - if hit
 				false - if miss
 */
-bool cache::Write2Cache(unsigned address);
+bool cache::Write2Cache(unsigned address)
+{
+	
+}
 
 /* Name: ReadCache
    Descriptioin: reads from the cache
    parameters: address- address of the data. will be used to calculate
 					tag, offset, set
 */
-unsigned cache::ReadCache(unsigned address);
+bool cache::ReadCache(unsigned address){
+	
+}
 
 
 /* Name: getnumOfAccess
@@ -60,7 +65,7 @@ unsigned cache::ReadCache(unsigned address);
 */
 double cache:: getnumOfAccess()const
 {
-	return numOfAccess;
+	return numOfAccess_;
 }
 
 
@@ -79,7 +84,7 @@ int cache:: gettime()const
    parameters: addres
    return value: set
 */
-unsigned cahce::calc_set(unsigned address){
+unsigned cache::calc_set(unsigned address){
 	unsigned set;
 
 }

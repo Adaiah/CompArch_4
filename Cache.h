@@ -10,7 +10,7 @@ class cache
 {
 public:
 	static int level;
-	cache(unsigned Csize, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc );
+	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc);
 	~cache();
 	unsigned get_miss() const;
 	bool Write2Cache(unsigned address);

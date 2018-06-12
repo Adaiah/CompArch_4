@@ -8,12 +8,13 @@ return value: none
 */
 Cache_set::Cache_set(unsigned ways)
 {
-	for (int i = 0; i < ways; i++)
+	for (std::list<Map>::iterator i = ways_.begin(), int j=0; i !=ways_.end(); i++,j++)
 	{
-		Map enter = new Map;
+		Map enter;
 		enter.dirty = 0;
 		enter.tag = 0;
-		ways_.insert(enter);
+		ways_.insert(i, enter);
+		*(LRU_arr_.begin() +j) = -1;//initializing LRU
 	}
 }
 
@@ -31,18 +32,31 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool readSet(unsigned tag);
+bool Cache_set::readSet(unsigned tag)
+{
+	unsigned int k=0;
+	for(std::list<Map>::iterator it=ways_.begin();it!=ways_.end();it++,k++)
+	{
+		if(it->tag==tag && it->dirty==1) {
+			
+			updateLRU(k);
+			return true;
+		}
+		return false;
+	}
+}
 
 
 /* Name: updateLRU
 Descriptioin: update the list holding LRU. remove the MRU and add to the end of the list and removes data from the way in the set
 	LRU is at the top of the list
-parameters: MRU_way- most recently used way
+parameters: MRU- most recently used way
 return value: none
 */
-void updateLRU(unsigned MRU)
+void Cache_set::updateLRU(unsigned MRU)
 {
-	
+	LRU_arr_.erase(LRU_arr_.begin+MRU);
+	LRU_arr_.push_back(MRU);
 }
 
 
@@ -51,13 +65,11 @@ Descriptioin: finds the location of a tag in the set
 parameters: tag
 return value: the way the tag was found at
 */
-int find_tag(unsigned tag);
+int Cache_set::find_tag(unsigned tag) {
+
+}
 
 
 Cache_set::~Cache_set() {
-	for (std::list<Map>::iterator it = ways_.begin; it != ways_.end; it++)
-	{
-		delete *it;
-	}
 }
 

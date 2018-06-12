@@ -73,9 +73,10 @@ int main(int argc, char **argv) {
 			return 0;
 		}
 	}
-	// write accordin to the c'str later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-	cache L1(powerOf2(L1Size), L1Cyc, powerOf2(BSize), L1Assoc, WrAlloc);
-	cache L2(powerOf2(L1Size), L2Cyc, powerOf2(BSize), L2Assoc, WrAlloc);
+	
+	
+	cache L1(powerOf2(L1Size), L1Cyc, powerOf2(BSize), L1Assoc, L1Cyc, WrAlloc);
+	cache L2(powerOf2(L1Size), L2Cyc, powerOf2(BSize), L2Assoc, L2Cyc, WrAlloc);
 	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
 	unsigned mem_access=0; //if accessed mem advance by 1;
 	while (getline(file, line)) {
@@ -102,7 +103,23 @@ int main(int argc, char **argv) {
 
 		// DEBUG - remove this line
 		cout << " (dec) " << num << endl;
-
+		// !!!!!!!!!!!!!!! not sure how operation is saved if char or not !!!!!!!!!!!!!!!!!!!!!!!
+		if(operation=='r')
+		{
+			if(!L1.ReadCache(num))
+			{
+				if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
+					time_mem+=MemCyc;
+					mem_access++;
+				}
+				
+			}
+		}
+		
+		if(operation=='w')
+		{
+			// !!!!!!!!!!!!!!!!Add code
+		}
 	}
 
 	double L1MissRate;
