@@ -111,7 +111,12 @@ int main(int argc, char **argv) {
 					time_mem+=MemCyc;
 					mem_access++;
 				}
+				L2.updateTime();
 				
+			}
+			else
+			{
+				L1.updateTime();
 			}
 		}
 		

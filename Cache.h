@@ -14,6 +14,7 @@ public:
 	unsigned get_miss() const;
 	bool Write2Cache(unsigned address);
 	bool ReadCache(unsigned address);
+	void updateTime();// Added!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	double getnumOfAccess()const;
 	int gettime()const;
 	unsigned calc_set(unsigned address);

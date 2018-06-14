@@ -48,13 +48,24 @@ bool cache::Write2Cache(unsigned address)
 }
 
 /* Name: ReadCache
-   Descriptioin: reads from the cache
+   Descriptioin: reads from the cache updates the number of access to the cache
    parameters: address- address of the data. will be used to calculate
 					tag, offset, set
 */
 bool cache::ReadCache(unsigned address){
 	
 	
+}
+
+
+/* Name: updateTime
+Descriptioin: updates the time of access to the cache
+parameters: None
+return value: None
+*/
+void cache::updateTime()
+{
+	time_ += cache_cycle_;
 }
 
 
