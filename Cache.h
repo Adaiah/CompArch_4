@@ -3,7 +3,6 @@
 #ifndef Cache.h
 #include <iostream>
 #include <vector>
-#include <map>
 #include "Sets.h"
 
 class cache

@@ -110,11 +110,19 @@ int main(int argc, char **argv) {
 				if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
 					time_mem+=MemCyc;
 					mem_access++;
+					L2.Write2Cache(num);// if missed in both cache than write update writing to both cache
+					L1.Write2Cache(num);
+					L1.updateTime();
+					L2.updateTime();
+					
 				}
+				//if miss only in L1 write to L1 and update time checking writing to L1 and readinf L2
+				L1.Write2Cache(num);
+				L1.updateTime();
 				L2.updateTime();
 				
 			}
-			else
+			else // data exists in L1
 			{
 				L1.updateTime();
 			}

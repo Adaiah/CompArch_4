@@ -55,7 +55,7 @@ return value: none
 */
 void Cache_set::updateLRU(unsigned MRU)
 {
-	LRU_arr_.erase(LRU_arr_.begin+MRU);
+	LRU_arr_.erase(LRU_arr_.begin()+MRU);
 	LRU_arr_.push_back(MRU);
 }
 

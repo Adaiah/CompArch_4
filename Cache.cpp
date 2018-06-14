@@ -53,8 +53,10 @@ bool cache::Write2Cache(unsigned address)
 					tag, offset, set
 */
 bool cache::ReadCache(unsigned address){
-	
-	
+	numOfAccess_++;
+	unsigned set = calc_set(address);
+	if (sets[set].readSet) return true;
+	return false;
 }
 
 
