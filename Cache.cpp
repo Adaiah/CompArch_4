@@ -56,6 +56,7 @@ bool cache::ReadCache(unsigned address){
 	numOfAccess_++;
 	unsigned set = calc_set(address);
 	if (sets[set].readSet) return true;
+	miss_++;
 	return false;
 }
 
