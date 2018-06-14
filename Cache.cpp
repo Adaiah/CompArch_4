@@ -8,7 +8,7 @@
 				Writing_policy - if allocating or not
 	return value: none
 */
-cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc) :
+cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, char WrAlloc) :
 	cache_size_(Csize), cache_cycle_(cache_cyc),Bsize_(Bsize), Assoc_(Assoc), miss_(0),
 	writing_policy_(WrAlloc), time_(0), numOfAccess_(0) {
 	for (int i=0; i<cache_size_;i++)

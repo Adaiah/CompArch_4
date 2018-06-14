@@ -9,7 +9,7 @@
 class cache
 {
 public:
-	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned Cyc, char WrAlloc);
+	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, char WrAlloc);
 	~cache();
 	unsigned get_miss() const;
 	bool Write2Cache(unsigned address);
