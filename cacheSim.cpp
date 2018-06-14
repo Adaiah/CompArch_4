@@ -15,9 +15,9 @@ using std::ifstream;
 using std::stringstream;
 
 /*calculates the power of 2 according to the exponent given*/
-int powerOf2(unsigned i)
+unsigned int powerOf2(unsigned i)
 {
-	int result = 1;
+	unsigned int result = 1;
 	for (int j=0; j < i; j++)
 	{
 		result *= 2;
@@ -73,10 +73,9 @@ int main(int argc, char **argv) {
 			return 0;
 		}
 	}
-	
-	
-	cache L1(powerOf2(L1Size), L1Cyc, powerOf2(BSize), L1Assoc, L1Cyc, WrAlloc);
-	cache L2(powerOf2(L1Size), L2Cyc, powerOf2(BSize), L2Assoc, L2Cyc, WrAlloc);
+
+	cache L1(powerOf2(L1Size), L1Cyc, powerOf2(BSize), L1Assoc, WrAlloc);
+	cache L2(powerOf2(L1Size), L2Cyc, powerOf2(BSize), L2Assoc, WrAlloc);
 	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
 	unsigned mem_access=0; //if accessed mem advance by 1;
 	while (getline(file, line)) {

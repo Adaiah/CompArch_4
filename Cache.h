@@ -9,7 +9,7 @@
 class cache
 {
 public:
-	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, char WrAlloc);
+	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, unsigned WrAlloc);
 	~cache();
 	unsigned get_miss() const;
 	bool Write2Cache(unsigned address);
@@ -26,7 +26,7 @@ private:
 	unsigned Bsize_;
 	unsigned Assoc_;
 	int miss_;
-	char writing_policy_;
+	unsigned writing_policy_;
 	int time_;
 	double numOfAccess_;
 	std::vector<Cache_set> sets;

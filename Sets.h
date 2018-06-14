@@ -2,7 +2,6 @@
 #ifndef Sets.h
 #include <list>
 #include <vector>
-#define OFFSET 4
 typedef struct map_
 {
 	int dirty; // 1 valid 0 not valid
