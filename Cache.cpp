@@ -1,19 +1,48 @@
 #include "Cache.h"
+#define CMDSIZE 32
+
+/*calculates the power of 2 according to the exponent given*/
+static uint32_t powerOf2(uint32_t i)
+{
+	uint32_t result = 1;
+	for (uint32_t j=0; j < i; j++)
+	{
+		result *= 2;
+	}
+	return result;
+}
+
+static uint32_t extractBits(uint32_t num, uint32_t from, uint32_t to) { // include from and to
+	num %= (to + 1);
+	num /= powerOf2(from);
+	return num;
+}
 
 /* Name: C'tr of the class
    Descriptioin: creates an instantiation of a cache
    parameters: Csize- cache size in bits;
 				Bsize- block size in bits		
-				Assoc - # of ways 
+				Assoc- in bits
 				Writing_policy - if allocating or not
 	return value: none
 */
-cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, char WrAlloc) :
-	cache_size_(Csize), cache_cycle_(cache_cyc),Bsize_(Bsize), Assoc_(Assoc), miss_(0),
-	writing_policy_(WrAlloc), time_(0), numOfAccess_(0) {
-	for (int i=0; i<cache_size_;i++)
+cache::cache(uint32_t Csize, uint32_t cache_cyc, uint32_t Bsize, uint32_t Assoc, bool WrAlloc) {
+	miss_ = 0;
+	time_ = 0;
+	numOfAccess_ = 0;
+	writing_policy = WrAlloc;
+	offset_bits_ = Bsize;
+	set_bits_ = Csize - Bsize - Assoc;
+	tag_bits_ = CMDSIZE - offset_bits_ - set_bits_;
+	cache_cycle_ = cache_cyc;
+	Bsize_ = powerOf2(Bsize);
+	cache_size_ = powerOf2(Csize);
+	Assoc_ = powerOf2(Assoc);
+	sets_ = powerOf2(set_bits_);//maybe we dont have enough space to use all of the power2(set_bits_)????
+
+	for (int i=0; i<sets_;i++)
 	{
-		Cache_set enter= Cache_set(Assoc);
+		Cache_set enter= Cache_set(Assoc_);
 		sets.push_back(enter);
 	}
 }
@@ -30,21 +59,28 @@ cache::~cache(){}
    parameters: None
    return value: miss
 */
-unsigned cache::get_miss() const{
-return miss_;
+uint32_t cache::get_miss() const{
+	return miss_;
 }
 
 /* Name: write2cache
-   Descriptioin: writes to cahce and according to the writing polilcy of the cache									advances the numOfAccess counter
+   Descriptioin: writes to cahce and according to the writing polilcy of the cache
 				advances the numOfAccess counter
    parameters: address- address of the data. will be used to calculate
 					tag, offset, set
    return value: true - if hit
 				false - if miss
 */
-bool cache::Write2Cache(unsigned address)
+bool cache::Write2Cache(uint32_t address)
 {
-	
+	numOfAccess_++;
+	uint32_t offset = extractBits(address, 0, offset_bits_ - 1);
+	uint32_t set = calc_set(address);
+	uint32_t tag = calc_tag(address);
+	if (sets[set].readSet(tag)) return true;
+	//miss
+
+
 }
 
 /* Name: ReadCache
@@ -52,7 +88,7 @@ bool cache::Write2Cache(unsigned address)
    parameters: address- address of the data. will be used to calculate
 					tag, offset, set
 */
-bool cache::ReadCache(unsigned address){
+bool cache::ReadCache(uint32_t address){
 	
 	
 }
@@ -84,8 +120,8 @@ int cache:: gettime()const
    parameters: address
    return value: set
 */
-unsigned cache::calc_set(unsigned address){
-	unsigned set;
+uint32_t cache::calc_set(uint32_t address){
+	return extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
 
 }
 
@@ -94,9 +130,9 @@ unsigned cache::calc_set(unsigned address){
    parameters: address
    return value: tag
 */
-unsigned cache::calc_tag(unsigned address)
+uint32_t cache::calc_tag(uint32_t address)
 {
-	
+	return extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
 }
 
 

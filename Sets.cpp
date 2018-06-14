@@ -6,15 +6,15 @@ Descriptioin: creates an instantiation of a set
 parameters: ways- number of ways;
 return value: none
 */
-Cache_set::Cache_set(unsigned ways)
+Cache_set::Cache_set(uint32_t ways)
 {
-	for (std::list<Map>::iterator i = ways_.begin(), int j=0; i !=ways_.end(); i++,j++)
+	for (std::list<Map>::iterator it = ways_.begin(), int j=0; it != ways_.end(); it++,j++)
 	{
 		Map enter;
 		enter.dirty = 0;
-		enter.tag = 0;
+		enter.tag = -1;
 		ways_.insert(i, enter);
-		*(LRU_arr_.begin() +j) = -1;//initializing LRU
+		*(LRU_arr_.begin() + j) = j;//initializing LRU
 	}
 }
 
@@ -24,7 +24,40 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool write2Set(unsigned tag);
+bool write2Set(uint32_t tag)
+{
+	for(std::list<Map>::iterator it=ways_.begin(), int k=0; it != ways_.end();it++,k++)
+	{
+		if(it->tag == tag) {
+			it->dirty = 1;
+			it->tag = tag;
+			updateLRU(k);
+			return true;
+		}
+	}
+
+	//none is with the same tag, and someone is empty
+	for(std::list<Map>::iterator it=ways_.begin(), int k=0; it != ways_.end();it++,k++)
+	{
+		if(it->tag == -1) {
+			it->dirty = 1;
+			it->tag = tag;
+			updateLRU(k);
+			return false;
+		}
+	}
+
+	//all ways are occupied
+	uint32_t lru = lru_from_LRU();
+	if ((ways_.begin() + lru)->dirty == 1)
+	{
+		//evict
+	}
+	(ways_.begin() + lru)->dirty = 1;
+	(ways_.begin() + lru)->tag = tag;
+	updateLRU(lru);
+	return false;
+}
 
 /* Name: readSet
 Descriptioin: reading from the set, checking dirty bit for miss, update LRU(calls for updateLRU func.)
@@ -32,18 +65,16 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool Cache_set::readSet(unsigned tag)
+bool Cache_set::readSet(uint32_t tag)
 {
-	unsigned int k=0;
-	for(std::list<Map>::iterator it=ways_.begin();it!=ways_.end();it++,k++)
+	for(std::list<Map>::iterator it=ways_.begin(), int k=0;it!=ways_.end();it++,k++)
 	{
-		if(it->tag==tag && it->dirty==1) {
-			
+		if(it->tag==tag) {//should he care about dirty????????????
 			updateLRU(k);
 			return true;
 		}
-		return false;
 	}
+	return false;
 }
 
 
@@ -53,20 +84,21 @@ Descriptioin: update the list holding LRU. remove the MRU and add to the end of 
 parameters: MRU- most recently used way
 return value: none
 */
-void Cache_set::updateLRU(unsigned MRU)
+void Cache_set::updateLRU(uint32_t MRU)
 {
-	LRU_arr_.erase(LRU_arr_.begin+MRU);
-	LRU_arr_.push_back(MRU);
+	for(std::vector<uint32_t>::iterator it=LRU_arr_.begin();it != LRU_arr_.end(); it++)
+	{
+		if (*it == MRU)
+		{
+			LRU_arr_.erase(it);
+			LRU_arr_.push_back(MRU);
+		}
+	}
 }
 
-
-/* Name: find_tag
-Descriptioin: finds the location of a tag in the set
-parameters: tag
-return value: the way the tag was found at
-*/
-int Cache_set::find_tag(unsigned tag) {
-
+uint32_t Cache_set::lru_from_LRU()
+{
+	return *(LRU_arr_.begin());
 }
 
 

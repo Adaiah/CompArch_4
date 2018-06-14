@@ -14,16 +14,7 @@ using std::cerr;
 using std::ifstream;
 using std::stringstream;
 
-/*calculates the power of 2 according to the exponent given*/
-int powerOf2(unsigned i)
-{
-	int result = 1;
-	for (int j=0; j < i; j++)
-	{
-		result *= 2;
-	}
-	return result;
-}
+
 
 int main(int argc, char **argv) {
 
@@ -45,7 +36,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	unsigned MemCyc = 0, BSize = 0, L1Size = 0, L2Size = 0, L1Assoc = 0,
+	uint32_t MemCyc = 0, BSize = 0, L1Size = 0, L2Size = 0, L1Assoc = 0,
 			L2Assoc = 0, L1Cyc = 0, L2Cyc = 0, WrAlloc = 0;
 
 	for (int i = 2; i < 19; i += 2) {
@@ -75,10 +66,10 @@ int main(int argc, char **argv) {
 	}
 	
 	
-	cache L1(powerOf2(L1Size), L1Cyc, powerOf2(BSize), L1Assoc, L1Cyc, WrAlloc);
-	cache L2(powerOf2(L1Size), L2Cyc, powerOf2(BSize), L2Assoc, L2Cyc, WrAlloc);
-	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
-	unsigned mem_access=0; //if accessed mem advance by 1;
+	cache L1(L1Size, L1Cyc, BSize, L1Assoc, WrAlloc);
+	cache L2(L2Size, L2Cyc, BSize, L2Assoc, WrAlloc);
+	uint32_t time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
+	uint32_t mem_access=0; //if accessed mem advance by 1;
 	while (getline(file, line)) {
 
 		stringstream ss(line);
@@ -98,7 +89,7 @@ int main(int argc, char **argv) {
 		// DEBUG - remove this line  
 		cout << ", address (hex)" << cutAddress;
 
-		unsigned long int num = 0;
+		uint32_t long int num = 0;
 		num = strtoul(cutAddress.c_str(), NULL, 16);
 
 		// DEBUG - remove this line
