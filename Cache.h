@@ -1,38 +1,44 @@
 #pragma once
 
-#ifndef Cache.h
+#ifndef Cache_h
 #include <iostream>
 #include <vector>
 #include <map>
 #include "Sets.h"
 
+
+
 class cache
 {
 public:
-	cache(uint32_t Csize, uint32_t cache_cyc, uint32_t Bsize, uint32_t Assoc, char WrAlloc);
+	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, bool WrAlloc, bool L1_or_L2);
 	~cache();
-	uint32_t get_miss() const;
-	bool Write2Cache(uint32_t address);
-	bool ReadCache(uint32_t address);
+	unsigned get_miss() const;
+	bool Write2Cache(unsigned address);
+	bool Add2Cache(unsigned address, unsigned* tag_to_evict);
+	void removeTag(unsigned int, unsigned int);
+	bool ReadCache(unsigned address);
 	double getnumOfAccess()const;
+	void updateTime();
 	int gettime()const;
-	uint32_t calc_set(uint32_t address);
-	uint32_t calc_tag(uint32_t address);
+	bool get_WR()const;
+	bool get_L1_L2()const;
 
 	
 private:
-	uint32_t offset_bits_;
-	uint32_t set_bits_;
-	uint32_t tag_bits_;
-	uint32_t cache_size_;
-	uint32_t cache_cycle_;
-	uint32_t Bsize_;
-	uint32_t Assoc_;
-	uint32_t sets_;
+	unsigned offset_bits_;
+	unsigned set_bits_;
+	unsigned tag_bits_;
+	unsigned cache_size_;
+	unsigned cache_cycle_;
+	unsigned Bsize_;
+	unsigned Assoc_;
+	unsigned sets_;
 	int miss_;
 	bool writing_policy_;
 	int time_;
 	double numOfAccess_;
+	bool L1_or_L2_;
 	std::vector<Cache_set> sets;
 };
 

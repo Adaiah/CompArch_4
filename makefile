@@ -9,24 +9,11 @@ RM = rm -f
 all: cacheSim
 #Creating the executables
 cacheSim: $(OBJS)
-$(CXXLINK) -o cacheSim $(OBJS)
+	$(CXXLINK) -o cacheSim $(OBJS)
 #Creating object files using default rules
 Sets.o: sets.cpp sets.h
 Cache.o: sets.cpp sets.h Cache.h Cache.cpp
 cacheSim.o:sets.cpp sets.h Cache.h Cache.cpp cacheSim.cpp
 #Cleaning old files before new make
 clean:
-$(RM) cacheSim *.o *.bak *~ "#"* core
-
-
-
-//////////////////////////////////////////////
-/*
-: cacheSim.cpp
-	g++ -o cacheSim cacheSim.cpp
-
-.PHONY: clean
-clean:
-	rm -f *.o
-	rm -f cacheSim
-*/
+	$(RM) cacheSim *.o *.bak *~ "#"* core

@@ -2,21 +2,28 @@
 #define CMDSIZE 32
 
 /*calculates the power of 2 according to the exponent given*/
-static uint32_t powerOf2(uint32_t i)
+static unsigned powerOf2(unsigned i)
 {
-	uint32_t result = 1;
-	for (uint32_t j=0; j < i; j++)
+	unsigned result = 1;
+	for (unsigned j=0; j < i; j++)
 	{
 		result *= 2;
 	}
 	return result;
 }
 
-static uint32_t extractBits(uint32_t num, uint32_t from, uint32_t to) { // include from and to
-	num %= (to + 1);
+static unsigned extractBits(unsigned num, unsigned from, unsigned to) { // include from and to
+	if (to + 1 == CMDSIZE)
+	{
+		return num / powerOf2(from);
+	}
+	num = num % powerOf2(to + 1);
 	num /= powerOf2(from);
 	return num;
 }
+
+
+
 
 /* Name: C'tr of the class
    Descriptioin: creates an instantiation of a cache
@@ -26,21 +33,21 @@ static uint32_t extractBits(uint32_t num, uint32_t from, uint32_t to) { // inclu
 				Writing_policy - if allocating or not
 	return value: none
 */
-cache::cache(uint32_t Csize, uint32_t cache_cyc, uint32_t Bsize, uint32_t Assoc, bool WrAlloc) {
+cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, bool WrAlloc, bool L1_or_L2) {
 	miss_ = 0;
 	time_ = 0;
 	numOfAccess_ = 0;
-	writing_policy = WrAlloc;
+	writing_policy_ = WrAlloc;
 	offset_bits_ = Bsize;
 	set_bits_ = Csize - Bsize - Assoc;
 	tag_bits_ = CMDSIZE - offset_bits_ - set_bits_;
 	cache_cycle_ = cache_cyc;
+	L1_or_L2_ = L1_or_L2;
 	Bsize_ = powerOf2(Bsize);
 	cache_size_ = powerOf2(Csize);
 	Assoc_ = powerOf2(Assoc);
 	sets_ = powerOf2(set_bits_);//maybe we dont have enough space to use all of the power2(set_bits_)????
-
-	for (int i=0; i<sets_;i++)
+	for (unsigned i=0; i<sets_;i++)
 	{
 		Cache_set enter= Cache_set(Assoc_);
 		sets.push_back(enter);
@@ -59,7 +66,7 @@ cache::~cache(){}
    parameters: None
    return value: miss
 */
-uint32_t cache::get_miss() const{
+unsigned cache::get_miss() const{
 	return miss_;
 }
 
@@ -71,26 +78,75 @@ uint32_t cache::get_miss() const{
    return value: true - if hit
 				false - if miss
 */
-bool cache::Write2Cache(uint32_t address)
+bool cache::Write2Cache(unsigned address)
 {
 	numOfAccess_++;
-	uint32_t offset = extractBits(address, 0, offset_bits_ - 1);
-	uint32_t set = calc_set(address);
-	uint32_t tag = calc_tag(address);
-	if (sets[set].readSet(tag)) return true;
-	//miss
-
-
+	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	if (sets[set].write2Set(tag))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
+
+/* Name: Add2Cache
+   Descriptioin: adds data to cache, if in read operation the data isnt there
+   parameters: address- address of the data. will be used to calculate
+					tag, offset, set
+   return value: true - can add without eviction
+*/
+bool cache::Add2Cache(unsigned address, unsigned* tag_to_evict)
+{
+	if(tag_to_evict != NULL) numOfAccess_++;
+
+	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	if (sets[set].add2Set(tag, writing_policy_, L1_or_L2_, tag_to_evict))
+	{
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+
+
+
+
+void cache::removeTag(unsigned address, unsigned tag_to_evict)
+{
+	numOfAccess_++;
+
+	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	sets[set].removetag(tag);
+}
+
+
+
+
+
 /* Name: ReadCache
-   Descriptioin: reads from the cache
+   Descriptioin: reads from the cache updates the number of access to the cache
    parameters: address- address of the data. will be used to calculate
 					tag, offset, set
 */
-bool cache::ReadCache(uint32_t address){
-	
-	
+bool cache::ReadCache(unsigned address){
+	numOfAccess_++;
+	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	// ASDF(offset_bits_ + set_bits_ - 1)
+	// ASDF(offset_bits_)
+	// ASDF(set)
+	if (sets[set].readSet(set)) return true;
+	miss_++;
+	ASDF("here1")
+	return false;
 }
 
 
@@ -99,9 +155,18 @@ bool cache::ReadCache(uint32_t address){
    parameters: None
    return value: numOfAccess
 */
-double cache:: getnumOfAccess()const
+double cache::getnumOfAccess()const
 {
 	return numOfAccess_;
+}
+
+bool cache::get_WR() const{
+	return writing_policy_;
+}
+
+
+bool cache::get_L1_L2() const{
+	return L1_or_L2_;
 }
 
 
@@ -115,26 +180,12 @@ int cache:: gettime()const
 	return time_;
 }
 
-/* Name: calc_set
-   Descriptioin: calculates set of a certain address for writing/reading
-   parameters: address
-   return value: set
+/* Name: updateTime
+Descriptioin: updates the time of access to the cache
+parameters: None
+return value: None
 */
-uint32_t cache::calc_set(uint32_t address){
-	return extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-
-}
-
-/* Name: calc_tag
-   Descriptioin: calculates tag of a certain address for writing/reading
-   parameters: address
-   return value: tag
-*/
-uint32_t cache::calc_tag(uint32_t address)
+void cache::updateTime()
 {
-	return extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	time_ += cache_cycle_;
 }
-
-
-
-

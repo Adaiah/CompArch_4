@@ -6,56 +6,103 @@ Descriptioin: creates an instantiation of a set
 parameters: ways- number of ways;
 return value: none
 */
-Cache_set::Cache_set(uint32_t ways)
+Cache_set::Cache_set(unsigned ways)
 {
-	for (std::list<Map>::iterator it = ways_.begin(), int j=0; it != ways_.end(); it++,j++)
+	for (unsigned i = 0; i < ways; i++)
 	{
 		Map enter;
 		enter.dirty = 0;
+		enter.valid = false;
 		enter.tag = -1;
-		ways_.insert(i, enter);
-		*(LRU_arr_.begin() + j) = j;//initializing LRU
+		ways_.push_back(enter);
+		LRU_arr_.push_back(i);//initializing LRU
 	}
 }
 
-/* Name: write2Set
-Descriptioin: writing to the set, update the LRU list(calls for updateLRU func.),change dirty bit
-parameters: tag 
-return value: true- if hit
-				false if miss
-*/
-bool write2Set(uint32_t tag)
+/* write if doesnt exist for read operation*/
+bool Cache_set::add2Set(unsigned tag, bool wa, bool L1_or_L2, unsigned* tag_to_evict)
 {
-	for(std::list<Map>::iterator it=ways_.begin(), int k=0; it != ways_.end();it++,k++)
+	int k=0;
+	//none is with the same tag, and someone is empty
+	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
+	{
+		if(!(it->valid)) {
+			it->dirty = 0;
+			it->valid = true;
+			it->tag = tag;
+			updateLRU(k);
+			ASDF("valid")
+			return true;
+		}
+	}
+	//all ways are occupied
+	unsigned lru = lru_from_LRU();
+	std::list<Map>::iterator it=ways_.begin();
+	for (unsigned i = 0; i < lru; ++i)
+	{
+		it++;
+	}
+	if(L1_or_L2 == L2T)//guarenteed no tag exists
+	{
+		*tag_to_evict = it->tag;
+		it->dirty = 0;
+		it->valid = true;
+		it->tag = tag;
+		updateLRU(lru);
+		return false;//requirs access to L1 to remove tag
+	}
+	else//L1
+	{
+		if (it->dirty == 1)//need to evict a dirty
+		{
+			it->dirty = 0;
+			it->valid = true;
+			it->tag = tag;
+			updateLRU(lru);
+			return false;
+		}
+		else
+		{
+			it->dirty = 0;
+			it->valid = true;
+			it->tag = tag;
+			updateLRU(lru);
+			return true;
+		}
+	}
+}
+
+
+void Cache_set::removetag(unsigned tag)
+{
+	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++)
 	{
 		if(it->tag == tag) {
+			it->dirty = 0;
+			it->tag = 0;
+			it->valid = false;
+			return;
+		}
+	}
+}
+
+/* Name: write2Set, for write operation
+Descriptioin: writing to the set, update the LRU list(calls for updateLRU func.),change dirty bit
+parameters: tag 
+return value: 
+*/
+bool Cache_set::write2Set(unsigned tag)
+{
+	int k=0;
+	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
+	{
+		if(it->tag == tag && it->valid) {
 			it->dirty = 1;
-			it->tag = tag;
+
 			updateLRU(k);
 			return true;
 		}
 	}
-
-	//none is with the same tag, and someone is empty
-	for(std::list<Map>::iterator it=ways_.begin(), int k=0; it != ways_.end();it++,k++)
-	{
-		if(it->tag == -1) {
-			it->dirty = 1;
-			it->tag = tag;
-			updateLRU(k);
-			return false;
-		}
-	}
-
-	//all ways are occupied
-	uint32_t lru = lru_from_LRU();
-	if ((ways_.begin() + lru)->dirty == 1)
-	{
-		//evict
-	}
-	(ways_.begin() + lru)->dirty = 1;
-	(ways_.begin() + lru)->tag = tag;
-	updateLRU(lru);
 	return false;
 }
 
@@ -65,11 +112,12 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool Cache_set::readSet(uint32_t tag)
+bool Cache_set::readSet(unsigned tag)
 {
-	for(std::list<Map>::iterator it=ways_.begin(), int k=0;it!=ways_.end();it++,k++)
+	int k=0;
+	for(std::list<Map>::iterator it=ways_.begin();it!=ways_.end();it++,k++)
 	{
-		if(it->tag==tag) {//should he care about dirty????????????
+		if(it->tag == tag && it->valid) {//should we care about dirty????????????
 			updateLRU(k);
 			return true;
 		}
@@ -84,21 +132,23 @@ Descriptioin: update the list holding LRU. remove the MRU and add to the end of 
 parameters: MRU- most recently used way
 return value: none
 */
-void Cache_set::updateLRU(uint32_t MRU)
+void Cache_set::updateLRU(unsigned MRU)
 {
-	for(std::vector<uint32_t>::iterator it=LRU_arr_.begin();it != LRU_arr_.end(); it++)
+	for(std::list<unsigned>::iterator it=LRU_arr_.begin();it != LRU_arr_.end(); it++)
 	{
 		if (*it == MRU)
 		{
 			LRU_arr_.erase(it);
 			LRU_arr_.push_back(MRU);
+			return;
 		}
 	}
 }
 
-uint32_t Cache_set::lru_from_LRU()
+unsigned Cache_set::lru_from_LRU()
 {
-	return *(LRU_arr_.begin());
+	std::list<unsigned>::iterator it=LRU_arr_.begin();
+	return *(it);
 }
 
 
