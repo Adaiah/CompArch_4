@@ -103,20 +103,24 @@ int main(int argc, char **argv) {
 					time_mem+=MemCyc;
 					mem_access++;
 					L2.updateTime();
-					if(!L2.Add2Cache(num, &tagToEvict))//need to evict from L1
+					if(!L2.Add2Cache(num, &tagToEvict))
 					{
+					//L2 needs to evict a tag so L1 needs also to evict the same tag
 						L1.updateTime();
 						L1.removeTag(num, tagToEvict);
 						// L1.updateTime();
 					}
-					L1.Add2Cache(num, NULL);
+					L1.Add2Cache(num, NULL);//write to L1 in the same time that writes to L2???????????????
+											//maybe needs another access?
 				}
 				else//in L2
 				{
 					L1.updateTime();
 					if(!L1.Add2Cache(num, &tagToEvict))
 					{
-						//need to write dirty to L2, its not a miss
+						//L1 needs to evict dirty
+						//need to write dirty to L2, its not important
+						//cause WB isnt calculated (see in forums)
 						L2.updateTime();
 					}
 				}
@@ -142,8 +146,8 @@ int main(int argc, char **argv) {
 							L1.updateTime();
 							L1.removeTag(num, tagToEvict);
 							// L1.updateTime();
-							L1.Add2Cache(num, NULL);
 						}
+						L1.Add2Cache(num, NULL);
 					}
 					else//on L2
 					{
@@ -167,6 +171,7 @@ int main(int argc, char **argv) {
 					}
 					else//on L2, then turn dirty bit on L2
 					{
+						//need to write dirty to L2, its not important
 						L2.updateTime();
 					}
 				}
