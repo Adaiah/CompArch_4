@@ -123,6 +123,7 @@ bool cache::Write2Cache(unsigned address, bool count)
 	}
 	else
 	{
+		if(count) miss_++;
 		return false;
 	}
 }
@@ -172,9 +173,15 @@ void cache::removeTag(unsigned address)
 bool cache::ReadCache(unsigned address){
 	numOfAccess_++;
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	if (sets[set].readSet(set)) return true;
-	miss_++;
-	return false;
+	if (sets[set].readSet(set))
+	{
+		return true;
+	}
+	else
+	{
+		miss_++;
+		return false;
+	}
 }
 
 

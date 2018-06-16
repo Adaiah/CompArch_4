@@ -94,9 +94,11 @@ int main(int argc, char **argv) {
 		// cout << " (dec) " << num << endl;
 		if(operation=='r')
 		{
+			L1.updateTime();
 			if(!L1.ReadCache(num))
 			{
 				L1.clear(num, L2); //if needed. L2 as argument to drop
+				L2.updateTime();
 				if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
 					time_mem+=MemCyc;
 					mem_access++;
@@ -105,58 +107,19 @@ int main(int argc, char **argv) {
 				}
 				//if miss only in L1 write to L1 and update time checking writing to L1 and readinf L2
 				L1.Write2Cache(num, 0);
-				L1.updateTime();
-				L2.updateTime();
-			}
-			else // data exists in L1
-			{
-				L1.updateTime();
 			}
 		}
-		// if(operation=='r')
-		// {
-		// 	L1.updateTime();
-		// 	if(!L1.ReadCache(num))
-		// 	{
-		// 		L2.updateTime();
-		// 		ASDF("2")
-		// 		if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
-		// 			time_mem+=MemCyc;
-		// 			mem_access++;
-		// 			L2.updateTime();
-		// 			ASDF("1")
-		// 			if(!L2.Add2Cache(num, &tagToEvict))
-		// 			{
-		// 			//L2 needs to evict a tag so L1 needs also to evict the same tag
-		// 				L1.updateTime();
-		// 				L1.removeTag(num, tagToEvict);
-		// 				// L1.updateTime();
-		// 			}
-		// 			L1.Add2Cache(num, NULL);//write to L1 in the same time that writes to L2???????????????
-		// 									//maybe needs another access?
-		// 		}
-		// 		else//in L2
-		// 		{
-		// 			L1.updateTime();
-		// 			if(!L1.Add2Cache(num, &tagToEvict))
-		// 			{
-		// 				//L1 needs to evict dirty
-		// 				//need to write dirty to L2, its not important
-		// 				//cause WB isnt calculated (see in forums)
-		// 				L2.updateTime();
-		// 			}
-		// 		}
-		// 	}
-		// }
 
 		if(operation=='w')
 		{
+			L1.updateTime();
 			if(!L1.Write2Cache(num, 1))
 			{
 				if (WrAlloc)
 				{
 					//clear space in L1, drop to L2 if needed
 					L1.clear(num, L2); //if needed. L2 as argument to drop
+					L2.updateTime();
 					if (!L2.Write2Cache(num, 1))//not in L2
 					{
 						L2.clear(num, L1); //if needed. L1 as argument to drop
@@ -168,8 +131,6 @@ int main(int argc, char **argv) {
 
 					}
 					L1.Write2Cache(num, 0);
-					L1.updateTime();
-					L2.updateTime();
 					//add to L1!!!!!!!!!!!
 
 				}
@@ -189,57 +150,6 @@ int main(int argc, char **argv) {
 
 			}
 		}
-		
-	// 	if(operation=='w')
-	// 	{
-	// 		L1.updateTime();
-	// 		if(!L1.Write2Cache(num))//not in L1
-	// 		{
-	// 			if (WrAlloc)
-	// 			{
-	// 				L2.updateTime();
-	// 				//snoop
-	// 				if (!L2.ReadCache(num))//isnt in L2
-	// 				{
-	// 					time_mem+=MemCyc;
-	// 					mem_access++;
-	// 					L2.updateTime();
-	// 					if(!L2.Add2Cache(num, &tagToEvict))//need to evict from L1
-	// 					{
-	// 						L1.updateTime();
-	// 						L1.removeTag(num, tagToEvict);
-	// 						// L1.updateTime();
-	// 					}
-	// 					L1.Add2Cache(num, NULL);
-	// 				}
-	// 				else//on L2
-	// 				{
-	// 					L1.updateTime();
-	// 					if(!L1.Add2Cache(num, &tagToEvict))
-	// 					{
-	// 						//need to write dirty to L2, its not a miss
-	// 						L2.updateTime();
-	// 					}
-	// 				}
-	// 			}
-	// 			else//nWA
-	// 			{
-	// 				L2.updateTime();
-	// 				//snoop
-	// 				if (!L2.ReadCache(num))//isnt in L2
-	// 				{
-	// 					// time_mem+=MemCyc;
-	// 					// mem_access++;
-	// 					// change the memory, i shouldnt care
-	// 				}
-	// 				else//on L2, then turn dirty bit on L2
-	// 				{
-	// 					//need to write dirty to L2, its not important
-	// 					L2.updateTime();
-	// 				}
-	// 			}
-	// 		}
-	// 	}
 	}
 
 	double L1MissRate;
