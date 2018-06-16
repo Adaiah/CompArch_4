@@ -11,27 +11,22 @@ Cache_set::Cache_set(unsigned ways)
 	for (unsigned i = 0; i < ways; i++)
 	{
 		Map enter;
-		enter.dirty = 0;
+		enter.dirty = false;
 		enter.valid = false;
-		enter.tag = -1;
+		enter.tag = 0;
 		ways_.push_back(enter);
 		LRU_arr_.push_back(i);//initializing LRU
 	}
 }
 
 /* write if doesnt exist for read operation*/
-bool Cache_set::add2Set(unsigned tag, bool wa, bool L1_or_L2, unsigned* tag_to_evict)
+bool Cache_set::clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict)
 {
 	int k=0;
 	//none is with the same tag, and someone is empty
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
 	{
 		if(!(it->valid)) {
-			it->dirty = 0;
-			it->valid = true;
-			it->tag = tag;
-			updateLRU(k);
-			ASDF("valid")
 			return true;
 		}
 	}
@@ -45,7 +40,7 @@ bool Cache_set::add2Set(unsigned tag, bool wa, bool L1_or_L2, unsigned* tag_to_e
 	if(L1_or_L2 == L2T)//guarenteed no tag exists
 	{
 		*tag_to_evict = it->tag;
-		it->dirty = 0;
+		it->dirty = false;
 		it->valid = true;
 		it->tag = tag;
 		updateLRU(lru);
@@ -55,18 +50,17 @@ bool Cache_set::add2Set(unsigned tag, bool wa, bool L1_or_L2, unsigned* tag_to_e
 	{
 		if (it->dirty == 1)//need to evict a dirty
 		{
-			it->dirty = 0;
+			*tag_to_evict = it->tag;
+			it->dirty = false;
 			it->valid = true;
 			it->tag = tag;
-			updateLRU(lru);
-			return false;
+			return false;//evicted the page but signals that should write modified to L2
 		}
 		else
 		{
-			it->dirty = 0;
+			it->dirty = false;
 			it->valid = true;
 			it->tag = tag;
-			updateLRU(lru);
 			return true;
 		}
 	}
@@ -78,7 +72,7 @@ void Cache_set::removetag(unsigned tag)
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++)
 	{
 		if(it->tag == tag) {
-			it->dirty = 0;
+			it->dirty = false;
 			it->tag = 0;
 			it->valid = false;
 			return;
@@ -96,9 +90,9 @@ bool Cache_set::write2Set(unsigned tag)
 	int k=0;
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
 	{
-		if(it->tag == tag && it->valid) {
-			it->dirty = 1;
-
+		if(it->tag == tag) {
+			it->dirty = it->valid;
+			it->valid = true;
 			updateLRU(k);
 			return true;
 		}

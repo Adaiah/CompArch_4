@@ -14,9 +14,10 @@ public:
 	cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc, bool WrAlloc, bool L1_or_L2);
 	~cache();
 	unsigned get_miss() const;
-	bool Write2Cache(unsigned address);
+	bool Write2Cache(unsigned address, bool count);
 	bool Add2Cache(unsigned address, unsigned* tag_to_evict);
-	void removeTag(unsigned int, unsigned int);
+	void removeTag(unsigned tag_to_evict);
+	void clear(unsigned address, cache& other);
 	bool ReadCache(unsigned address);
 	double getnumOfAccess()const;
 	void updateTime();

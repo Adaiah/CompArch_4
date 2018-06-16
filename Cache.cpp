@@ -60,6 +60,40 @@ cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc,
 */
 cache::~cache(){}
 
+
+
+
+void cache::clear(unsigned address, cache& other)
+{
+	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	unsigned tag_to_evict;
+	if (!sets[set].clearSet(tag, L1_or_L2_, &tag_to_evict))
+	{
+		unsigned num = tag_to_evict * powerOf2(offset_bits_ + set_bits_) + set * powerOf2(offset_bits_);
+		if (L1_or_L2_ == L2T)// other is L1
+		{
+			other.removeTag(num);
+			//if it is dirty? maybe recursive
+		}
+		else//L1,other is L2
+		{
+			//if is dirty change in L2
+			other.Write2Cache(num, 0);
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
 /* Name: get_miss
    Descriptioin: returns the number of miss when using the cahce
 				advances the numOfAccess counter
@@ -78,9 +112,9 @@ unsigned cache::get_miss() const{
    return value: true - if hit
 				false - if miss
 */
-bool cache::Write2Cache(unsigned address)
+bool cache::Write2Cache(unsigned address, bool count)
 {
-	numOfAccess_++;
+	if(count) numOfAccess_++;
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
 	if (sets[set].write2Set(tag))
@@ -100,29 +134,27 @@ bool cache::Write2Cache(unsigned address)
 					tag, offset, set
    return value: true - can add without eviction
 */
-bool cache::Add2Cache(unsigned address, unsigned* tag_to_evict)
+// bool cache::Add2Cache(unsigned address, unsigned* tag_to_evict)
+// {
+// 	if(tag_to_evict != NULL) numOfAccess_++;
+
+// 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+// 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+// 	if (sets[set].add2Set(tag, writing_policy_, L1_or_L2_, tag_to_evict))
+// 	{
+// 		return true;
+// 	}
+// 	else 
+// 	{
+// 		return false;
+// 	}
+// }
+
+
+
+
+void cache::removeTag(unsigned address)
 {
-	if(tag_to_evict != NULL) numOfAccess_++;
-
-	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	if (sets[set].add2Set(tag, writing_policy_, L1_or_L2_, tag_to_evict))
-	{
-		return true;
-	}
-	else 
-	{
-		return false;
-	}
-}
-
-
-
-
-void cache::removeTag(unsigned address, unsigned tag_to_evict)
-{
-	numOfAccess_++;
-
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
 	sets[set].removetag(tag);
@@ -140,12 +172,8 @@ void cache::removeTag(unsigned address, unsigned tag_to_evict)
 bool cache::ReadCache(unsigned address){
 	numOfAccess_++;
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	// ASDF(offset_bits_ + set_bits_ - 1)
-	// ASDF(offset_bits_)
-	// ASDF(set)
 	if (sets[set].readSet(set)) return true;
 	miss_++;
-	ASDF("here1")
 	return false;
 }
 

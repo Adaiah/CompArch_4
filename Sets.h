@@ -13,7 +13,7 @@ using std::endl;
 
 typedef struct map_
 {
-	int dirty; // 1 valid 0 not valid
+	bool dirty;
 	unsigned tag;
 	bool valid;
 } Map;
@@ -23,7 +23,7 @@ class Cache_set
 public:
 	Cache_set(unsigned ways);
 	bool write2Set(unsigned tag);
-	bool add2Set(unsigned tag, bool wa, bool L1_or_L2, unsigned* tag_to_evict);
+	bool clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict);
 	void removetag(unsigned tag);
 	bool readSet(unsigned tag);
 	void updateLRU(unsigned MRU);  
