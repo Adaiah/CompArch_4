@@ -13,11 +13,10 @@ static unsigned powerOf2(unsigned i)
 }
 
 static unsigned extractBits(unsigned num, unsigned from, unsigned to) { // include from and to
-	if (to + 1 == CMDSIZE)
+	if (to + 1 != CMDSIZE)
 	{
-		return num / powerOf2(from);
+		num = num % powerOf2(to + 1);
 	}
-	num = num % powerOf2(to + 1);
 	num /= powerOf2(from);
 	return num;
 }
@@ -86,14 +85,6 @@ void cache::clear(unsigned address, cache& other)
 
 
 
-
-
-
-
-
-
-
-
 /* Name: get_miss
    Descriptioin: returns the number of miss when using the cahce
 				advances the numOfAccess counter
@@ -117,7 +108,7 @@ bool cache::Write2Cache(unsigned address, bool count)
 	if(count) numOfAccess_++;
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	if (sets[set].write2Set(tag))
+	if (sets[set].write2Set(tag, address))
 	{
 		return true;
 	}
@@ -173,7 +164,8 @@ void cache::removeTag(unsigned address)
 bool cache::ReadCache(unsigned address){
 	numOfAccess_++;
 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	if (sets[set].readSet(set))
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	if (sets[set].readSet(tag, address))
 	{
 		return true;
 	}

@@ -85,13 +85,25 @@ Descriptioin: writing to the set, update the LRU list(calls for updateLRU func.)
 parameters: tag 
 return value: 
 */
-bool Cache_set::write2Set(unsigned tag)
+bool Cache_set::write2Set(unsigned tag, unsigned address)
 {
 	int k=0;
+	//if tag is valid-great
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
 	{
-		if(it->tag == tag) {
-			it->dirty = it->valid;
+		if(it->tag == tag && it->valid) {
+			it->dirty = true;
+			it->valid = true;
+			updateLRU(k);
+			return true;
+		}
+	}
+	//else- find empty space
+	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
+	{
+		if(it->valid == false) {
+			it->tag = tag;
+			it->dirty = false;
 			it->valid = true;
 			updateLRU(k);
 			return true;
@@ -106,12 +118,13 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool Cache_set::readSet(unsigned tag)
+bool Cache_set::readSet(unsigned tag, unsigned address)
 {
 	int k=0;
 	for(std::list<Map>::iterator it=ways_.begin();it!=ways_.end();it++,k++)
 	{
-		if(it->tag == tag && it->valid) {//should we care about dirty????????????
+		if(it->tag == tag && it->valid) {
+
 			updateLRU(k);
 			return true;
 		}

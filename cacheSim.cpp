@@ -103,41 +103,42 @@ int main(int argc, char **argv) {
 					time_mem+=MemCyc;
 					mem_access++;
 					L2.clear(num, L1); //if needed. L1 as argument to drop
-					L2.Write2Cache(num, 0);// if missed in both cache than write update writing to both cache
+					L2.Write2Cache(num, false);// if missed in both cache than write update writing to both cache
 				}
 				//if miss only in L1 write to L1 and update time checking writing to L1 and readinf L2
-				L1.Write2Cache(num, 0);
+				L1.Write2Cache(num, false);
 			}
 		}
 
 		if(operation=='w')
 		{
+			ASDF("write????")
 			L1.updateTime();
-			if(!L1.Write2Cache(num, 1))
+			if(!L1.Write2Cache(num, true))
 			{
 				if (WrAlloc)
 				{
 					//clear space in L1, drop to L2 if needed
 					L1.clear(num, L2); //if needed. L2 as argument to drop
 					L2.updateTime();
-					if (!L2.Write2Cache(num, 1))//not in L2
+					if (!L2.Write2Cache(num, true))//not in L2
 					{
 						L2.clear(num, L1); //if needed. L1 as argument to drop
 						//bring from disk
 						time_mem+=MemCyc;
 						mem_access++;
 						//add to L2!!!!!!!!!!!!!!!
-						L2.Write2Cache(num, 0);// if missed in both cache than write update writing to both cache
+						L2.Write2Cache(num, false);// if missed in both cache than write update writing to both cache
 
 					}
-					L1.Write2Cache(num, 0);
+					L1.Write2Cache(num, false);
 					//add to L1!!!!!!!!!!!
 
 				}
 				else
 				{
 					L2.updateTime();
-					if (!L2.Write2Cache(num, 1))//not in L2
+					if (!L2.Write2Cache(num, true))//not in L2
 					{
 						//write straight to disk?
 					}
@@ -157,7 +158,7 @@ int main(int argc, char **argv) {
 	double avgAccTime;
 	L1MissRate = L1.get_miss() / L1.getnumOfAccess();
 	L2MissRate = L2.get_miss() / L2.getnumOfAccess();
-	avgAccTime = (L1.gettime() + L2.get_miss() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess() + mem_access);//maybe without mem_access
+	avgAccTime = (L1.gettime() + L2.get_miss() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess());//maybe without mem_access
 
 	printf("L1miss=%.03f ", L1MissRate);
 	printf("L2miss=%.03f ", L2MissRate);

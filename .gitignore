@@ -340,3 +340,5 @@ provided_test_my_out/my_out1_output
 provided_test_my_out/my_out2_output
 provided_test_my_out/my_out3_output
 *.pdf
+*.txt
+test9_command

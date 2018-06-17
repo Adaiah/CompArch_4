@@ -9,7 +9,7 @@ using std::endl;
 #define L1T 0
 #define L2T 1
 
-#define ASDF(x) cout << "IM HERE "<< x << endl;
+#define ASDF(x) cout << "debug: "<< x << endl;
 
 typedef struct map_
 {
@@ -22,10 +22,10 @@ class Cache_set
 {
 public:
 	Cache_set(unsigned ways);
-	bool write2Set(unsigned tag);
+	bool write2Set(unsigned tag, unsigned address);
 	bool clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict);
 	void removetag(unsigned tag);
-	bool readSet(unsigned tag);
+	bool readSet(unsigned tag, unsigned address);
 	void updateLRU(unsigned MRU);  
 	unsigned lru_from_LRU();
 	unsigned find_tag(unsigned tag);
