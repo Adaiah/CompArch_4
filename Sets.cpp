@@ -20,7 +20,7 @@ Cache_set::Cache_set(unsigned ways)
 }
 
 /* write if doesnt exist for read operation*/
-bool Cache_set::clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict)
+bool Cache_set::clearSet(bool L1_or_L2, unsigned* tag_to_evict)
 {
 	int k=0;
 	//none is with the same tag, and someone is empty
@@ -40,10 +40,12 @@ bool Cache_set::clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict)
 	if(L1_or_L2 == L2T)//guarenteed no tag exists
 	{
 		*tag_to_evict = it->tag;
+		// ASDF("tag_to_evict")
+		// ASDF(lru)
+		// ASDF((*tag_to_evict))
+		if (it->dirty == 1) {} //should i do something???????????????????
 		it->dirty = false;
-		it->valid = true;
-		it->tag = tag;
-		updateLRU(lru);
+		it->valid = false;
 		return false;//requirs access to L1 to remove tag
 	}
 	else//L1
@@ -52,15 +54,13 @@ bool Cache_set::clearSet(unsigned tag, bool L1_or_L2, unsigned* tag_to_evict)
 		{
 			*tag_to_evict = it->tag;
 			it->dirty = false;
-			it->valid = true;
-			it->tag = tag;
+			it->valid = false;
 			return false;//evicted the page but signals that should write modified to L2
 		}
 		else
 		{
 			it->dirty = false;
-			it->valid = true;
-			it->tag = tag;
+			it->valid = false;
 			return true;
 		}
 	}
@@ -71,7 +71,7 @@ void Cache_set::removetag(unsigned tag)
 {
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++)
 	{
-		if(it->tag == tag) {
+		if(it->tag == tag && it->valid) {
 			it->dirty = false;
 			it->tag = 0;
 			it->valid = false;
@@ -85,28 +85,31 @@ Descriptioin: writing to the set, update the LRU list(calls for updateLRU func.)
 parameters: tag 
 return value: 
 */
-bool Cache_set::write2Set(unsigned tag, unsigned address)
+bool Cache_set::write2Set(unsigned tag, unsigned address, bool real_write, bool dirty)
 {
 	int k=0;
-	//if tag is valid-great
+	//if tag is valid-> great
 	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
 	{
 		if(it->tag == tag && it->valid) {
 			it->dirty = true;
-			it->valid = true;
 			updateLRU(k);
 			return true;
 		}
 	}
 	//else- find empty space
-	for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
+	k=0;
+	if(!real_write)
 	{
-		if(it->valid == false) {
-			it->tag = tag;
-			it->dirty = false;
-			it->valid = true;
-			updateLRU(k);
-			return true;
+		for(std::list<Map>::iterator it=ways_.begin(); it != ways_.end();it++,k++)
+		{
+			if(it->valid == false) {
+				it->tag = tag;
+				it->dirty = dirty;
+				it->valid = true;
+				updateLRU(k);
+				return true;
+			}
 		}
 	}
 	return false;
@@ -118,7 +121,7 @@ parameters: tag
 return value: true- if hit
 				false if miss
 */
-bool Cache_set::readSet(unsigned tag, unsigned address)
+bool Cache_set::readSet(unsigned tag)
 {
 	int k=0;
 	for(std::list<Map>::iterator it=ways_.begin();it!=ways_.end();it++,k++)
@@ -154,6 +157,11 @@ void Cache_set::updateLRU(unsigned MRU)
 
 unsigned Cache_set::lru_from_LRU()
 {
+	// ASDF("start")
+	// for(std::list<unsigned>::iterator it=LRU_arr_.begin();it != LRU_arr_.end(); it++)
+	// {
+	// 	ASDF((*it))
+	// }
 	std::list<unsigned>::iterator it=LRU_arr_.begin();
 	return *(it);
 }

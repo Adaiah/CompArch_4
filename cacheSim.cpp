@@ -63,7 +63,6 @@ int main(int argc, char **argv) {
 			return 0;
 		}
 	}
-	
 	cache L1(L1Size, L1Cyc, BSize, L1Assoc, WrAlloc, L1T);
 	cache L2(L2Size, L2Cyc, BSize, L2Assoc, WrAlloc, L2T);
 	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
@@ -97,48 +96,47 @@ int main(int argc, char **argv) {
 			L1.updateTime();
 			if(!L1.ReadCache(num))
 			{
-				L1.clear(num, L2); //if needed. L2 as argument to drop
+				L1.clear(num, L2); //if needed. L2 as argument to drop to
 				L2.updateTime();
 				if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
 					time_mem+=MemCyc;
 					mem_access++;
-					L2.clear(num, L1); //if needed. L1 as argument to drop
-					L2.Write2Cache(num, false);// if missed in both cache than write update writing to both cache
+					L2.clear(num, L1); //if needed. L1 as argument to drop to
+					L2.Write2Cache(num, false, false);// if missed in both cache than write update writing to both cache
 				}
 				//if miss only in L1 write to L1 and update time checking writing to L1 and readinf L2
-				L1.Write2Cache(num, false);
+				L1.Write2Cache(num, false, false);
 			}
 		}
 
 		if(operation=='w')
 		{
-			ASDF("write????")
 			L1.updateTime();
-			if(!L1.Write2Cache(num, true))
+			if(!L1.Write2Cache(num, true, true))
 			{
 				if (WrAlloc)
 				{
 					//clear space in L1, drop to L2 if needed
-					L1.clear(num, L2); //if needed. L2 as argument to drop
+					L1.clear(num, L2); //if needed. L2 as argument to drop to
 					L2.updateTime();
-					if (!L2.Write2Cache(num, true))//not in L2
+					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
-						L2.clear(num, L1); //if needed. L1 as argument to drop
+						L2.clear(num, L1); //if needed. L1 as argument to drop to
 						//bring from disk
 						time_mem+=MemCyc;
 						mem_access++;
 						//add to L2!!!!!!!!!!!!!!!
-						L2.Write2Cache(num, false);// if missed in both cache than write update writing to both cache
+						L2.Write2Cache(num, false, false);// if missed in both cache than write update writing to both cache
 
 					}
-					L1.Write2Cache(num, false);
+					L1.Write2Cache(num, false, true);
 					//add to L1!!!!!!!!!!!
 
 				}
-				else
+				else//no WrAlloc
 				{
 					L2.updateTime();
-					if (!L2.Write2Cache(num, true))//not in L2
+					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
 						//write straight to disk?
 					}
@@ -146,9 +144,7 @@ int main(int argc, char **argv) {
 					{
 
 					}
-					
 				}
-
 			}
 		}
 	}
@@ -158,7 +154,7 @@ int main(int argc, char **argv) {
 	double avgAccTime;
 	L1MissRate = L1.get_miss() / L1.getnumOfAccess();
 	L2MissRate = L2.get_miss() / L2.getnumOfAccess();
-	avgAccTime = (L1.gettime() + L2.get_miss() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess());//maybe without mem_access
+	avgAccTime = (L1.gettime() + L2.gettime() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess());//maybe without mem_access
 
 	printf("L1miss=%.03f ", L1MissRate);
 	printf("L2miss=%.03f ", L2MissRate);

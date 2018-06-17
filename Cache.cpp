@@ -52,35 +52,36 @@ cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc,
 		sets.push_back(enter);
 	}
 }
-/* Name: DC'tr of the class
-   Descriptioin:N/A
-   parameters: None
-	return value: None
-*/
+
 cache::~cache(){}
-
-
 
 
 void cache::clear(unsigned address, cache& other)
 {
-	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
 	unsigned tag_to_evict;
-	if (!sets[set].clearSet(tag, L1_or_L2_, &tag_to_evict))
+	if (!sets[set].clearSet(L1_or_L2_, &tag_to_evict))
 	{
 		unsigned num = tag_to_evict * powerOf2(offset_bits_ + set_bits_) + set * powerOf2(offset_bits_);
 		if (L1_or_L2_ == L2T)// other is L1
 		{
 			other.removeTag(num);
-			//if it is dirty? maybe recursive
+			//if it is dirty? maybe recursive??????????????????????
 		}
 		else//L1,other is L2
 		{
 			//if is dirty change in L2
-			other.Write2Cache(num, 0);
+			other.Write2Cache(num, false, true);
 		}
 	}
+}
+
+
+void cache::removeTag(unsigned address)
+{
+	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
+	sets[set].removetag(tag);
 }
 
 
@@ -103,58 +104,21 @@ unsigned cache::get_miss() const{
    return value: true - if hit
 				false - if miss
 */
-bool cache::Write2Cache(unsigned address, bool count)
+bool cache::Write2Cache(unsigned address, bool real_write, bool dirty)
 {
-	if(count) numOfAccess_++;
-	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	if(real_write) numOfAccess_++;
+	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	if (sets[set].write2Set(tag, address))
+	if (sets[set].write2Set(tag, address, real_write, dirty))
 	{
 		return true;
 	}
 	else
 	{
-		if(count) miss_++;
+		if(real_write) miss_++;
 		return false;
 	}
 }
-
-
-/* Name: Add2Cache
-   Descriptioin: adds data to cache, if in read operation the data isnt there
-   parameters: address- address of the data. will be used to calculate
-					tag, offset, set
-   return value: true - can add without eviction
-*/
-// bool cache::Add2Cache(unsigned address, unsigned* tag_to_evict)
-// {
-// 	if(tag_to_evict != NULL) numOfAccess_++;
-
-// 	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-// 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-// 	if (sets[set].add2Set(tag, writing_policy_, L1_or_L2_, tag_to_evict))
-// 	{
-// 		return true;
-// 	}
-// 	else 
-// 	{
-// 		return false;
-// 	}
-// }
-
-
-
-
-void cache::removeTag(unsigned address)
-{
-	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
-	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	sets[set].removetag(tag);
-}
-
-
-
-
 
 /* Name: ReadCache
    Descriptioin: reads from the cache updates the number of access to the cache
@@ -163,9 +127,9 @@ void cache::removeTag(unsigned address)
 */
 bool cache::ReadCache(unsigned address){
 	numOfAccess_++;
-	unsigned set = extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1);
+	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	if (sets[set].readSet(tag, address))
+	if (sets[set].readSet(tag))
 	{
 		return true;
 	}
@@ -185,15 +149,6 @@ bool cache::ReadCache(unsigned address){
 double cache::getnumOfAccess()const
 {
 	return numOfAccess_;
-}
-
-bool cache::get_WR() const{
-	return writing_policy_;
-}
-
-
-bool cache::get_L1_L2() const{
-	return L1_or_L2_;
 }
 
 
