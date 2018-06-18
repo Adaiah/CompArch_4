@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 	cache L1(L1Size, L1Cyc, BSize, L1Assoc, WrAlloc, L1T);
 	cache L2(L2Size, L2Cyc, BSize, L2Assoc, WrAlloc, L2T);
 	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
-	unsigned mem_access=0; //if accessed mem advance by 1;
+	unsigned mem_access = 0; //if accessed mem advance by 1;
 	while (getline(file, line)) {
 
 		stringstream ss(line);
@@ -99,9 +99,10 @@ int main(int argc, char **argv) {
 				L1.clear(num, L2); //if needed. L2 as argument to drop to
 				L2.updateTime();
 				if(!L2.ReadCache(num)){// if miss in both L1 L2 calc time using mem
-					time_mem+=MemCyc;
-					mem_access++;
-					L2.clear(num, L1); //if needed. L1 as argument to drop to
+					int tmp = L2.clear(num, L1);
+					time_mem+=MemCyc * tmp; //if needed. L1 as argument to drop to
+					mem_access+= tmp;
+					
 					L2.Write2Cache(num, false, false);// if missed in both cache than write update writing to both cache
 				}
 				//if miss only in L1 write to L1 and update time checking writing to L1 and readinf L2
@@ -121,12 +122,11 @@ int main(int argc, char **argv) {
 					L2.updateTime();
 					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
-						L2.clear(num, L1); //if needed. L1 as argument to drop to
-						//bring from disk
-						time_mem+=MemCyc;
-						mem_access++;
+						int tmp =L2.clear(num, L1);
+						time_mem+=MemCyc * tmp;//if needed. L1 as argument to drop to
+						mem_access+= tmp;
 						//add to L2!!!!!!!!!!!!!!!
-						L2.Write2Cache(num, false, false);// if missed in both cache than write update writing to both cache
+						L2.Write2Cache(num, false, false);//bring from memory
 
 					}
 					L1.Write2Cache(num, false, true);
@@ -135,14 +135,12 @@ int main(int argc, char **argv) {
 				}
 				else//no WrAlloc
 				{
+					ASDF("no alloc???????")
 					L2.updateTime();
 					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
-						//write straight to disk?
-					}
-					else
-					{
-
+						time_mem+=MemCyc;
+						mem_access++;
 					}
 				}
 			}
@@ -154,7 +152,7 @@ int main(int argc, char **argv) {
 	double avgAccTime;
 	L1MissRate = L1.get_miss() / L1.getnumOfAccess();
 	L2MissRate = L2.get_miss() / L2.getnumOfAccess();
-	avgAccTime = (L1.gettime() + L2.gettime() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess());//maybe without mem_access
+	avgAccTime = (L1.gettime() + L2.gettime() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess() + mem_access);//maybe without mem_access
 
 	printf("L1miss=%.03f ", L1MissRate);
 	printf("L2miss=%.03f ", L2MissRate);

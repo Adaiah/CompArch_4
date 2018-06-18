@@ -22,9 +22,9 @@ class Cache_set
 {
 public:
 	Cache_set(unsigned ways);
-	bool write2Set(unsigned tag, unsigned address, bool real_write, bool dirty);
-	bool clearSet(bool L1_or_L2, unsigned* tag_to_evict);
-	void removetag(unsigned tag);
+	bool write2Set(unsigned tag, unsigned address, bool real_write, bool dirty, bool L1_or_L2);
+	bool clearSet(unsigned address,unsigned tag, bool L1_or_L2, unsigned* tag_to_evict);
+	bool removetag(unsigned tag);
 	bool readSet(unsigned tag);
 	void updateLRU(unsigned MRU);  
 	unsigned lru_from_LRU();

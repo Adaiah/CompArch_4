@@ -55,33 +55,44 @@ cache::cache(unsigned Csize, unsigned cache_cyc, unsigned Bsize, unsigned Assoc,
 
 cache::~cache(){}
 
-
-void cache::clear(unsigned address, cache& other)
+//i- evicted times from L2 to memory
+//only L2 will change it
+int cache::clear(unsigned address, cache& other)
 {
+	int evicted = 1;
 	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
+	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
 	unsigned tag_to_evict;
-	if (!sets[set].clearSet(L1_or_L2_, &tag_to_evict))
+	if (!sets[set].clearSet(address, tag, L1_or_L2_, &tag_to_evict))
 	{
 		unsigned num = tag_to_evict * powerOf2(offset_bits_ + set_bits_) + set * powerOf2(offset_bits_);
 		if (L1_or_L2_ == L2T)// other is L1
 		{
-			other.removeTag(num);
-			//if it is dirty? maybe recursive??????????????????????
+			other.updateTime();
+			if (other.removeTag(num))
+			{
+				// it was dirty in L1
+				evicted += 1;
+			}
 		}
-		else//L1,other is L2
+		else if (L1_or_L2_ == L1T)
 		{
 			//if is dirty change in L2
+			//considered access
+			// evicted += other.clear(num, *this);
+			other.updateTime();
 			other.Write2Cache(num, false, true);
 		}
 	}
+	return evicted;
 }
 
 
-void cache::removeTag(unsigned address)
+bool cache::removeTag(unsigned address)
 {
 	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	sets[set].removetag(tag);
+	return sets[set].removetag(tag);
 }
 
 
@@ -109,7 +120,7 @@ bool cache::Write2Cache(unsigned address, bool real_write, bool dirty)
 	if(real_write) numOfAccess_++;
 	unsigned set = (set_bits_) ? extractBits(address, offset_bits_, offset_bits_ + set_bits_ - 1) : 0;
 	unsigned tag = extractBits(address, offset_bits_ + set_bits_, CMDSIZE - 1);
-	if (sets[set].write2Set(tag, address, real_write, dirty))
+	if (sets[set].write2Set(tag, address, real_write, dirty, L1_or_L2_))
 	{
 		return true;
 	}

@@ -16,8 +16,8 @@ public:
 	unsigned get_miss() const;
 	bool Write2Cache(unsigned address, bool real_write, bool dirty);
 	bool Add2Cache(unsigned address, unsigned* tag_to_evict);
-	void removeTag(unsigned tag_to_evict);
-	void clear(unsigned address, cache& other);
+	bool removeTag(unsigned tag_to_evict);
+	int clear(unsigned address, cache& other);
 	bool ReadCache(unsigned address);
 	double getnumOfAccess()const;
 	void updateTime();
