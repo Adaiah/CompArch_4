@@ -68,11 +68,11 @@ int cache::clear(unsigned address, cache& other)
 		unsigned num = tag_to_evict * powerOf2(offset_bits_ + set_bits_) + set * powerOf2(offset_bits_);
 		if (L1_or_L2_ == L2T)// other is L1
 		{
-			other.updateTime();
+			//other.updateTime();
 			if (other.removeTag(num))
 			{
 				// it was dirty in L1
-				evicted += 1;
+				//evicted += 1;
 			}
 		}
 		else if (L1_or_L2_ == L1T)
@@ -80,7 +80,7 @@ int cache::clear(unsigned address, cache& other)
 			//if is dirty change in L2
 			//considered access
 			// evicted += other.clear(num, *this);
-			other.updateTime();
+			//other.updateTime();
 			other.Write2Cache(num, false, true);
 		}
 	}

@@ -63,12 +63,13 @@ int main(int argc, char **argv) {
 			return 0;
 		}
 	}
+	int instructions = 0;
 	cache L1(L1Size, L1Cyc, BSize, L1Assoc, WrAlloc, L1T);
 	cache L2(L2Size, L2Cyc, BSize, L2Assoc, WrAlloc, L2T);
 	unsigned time_mem = 0; // if misses in both L1 and L2 then update by adding MemCyc
 	unsigned mem_access = 0; //if accessed mem advance by 1;
 	while (getline(file, line)) {
-
+		instructions++;
 		stringstream ss(line);
 		string address;
 		char operation = 0; // read (R) or write (W)
@@ -122,9 +123,13 @@ int main(int argc, char **argv) {
 					L2.updateTime();
 					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
-						int tmp =L2.clear(num, L1);
+						
+						int tmp = L2.clear(num, L1);
 						time_mem+=MemCyc * tmp;//if needed. L1 as argument to drop to
 						mem_access+= tmp;
+						if (num != 303934812) {
+							ASDF(tmp)
+						}
 						//add to L2!!!!!!!!!!!!!!!
 						L2.Write2Cache(num, false, false);//bring from memory
 
@@ -135,7 +140,7 @@ int main(int argc, char **argv) {
 				}
 				else//no WrAlloc
 				{
-					ASDF("no alloc???????")
+					//ASDF("no alloc???????")
 					L2.updateTime();
 					if (!L2.Write2Cache(num, true, true))//not in L2
 					{
@@ -152,7 +157,9 @@ int main(int argc, char **argv) {
 	double avgAccTime;
 	L1MissRate = L1.get_miss() / L1.getnumOfAccess();
 	L2MissRate = L2.get_miss() / L2.getnumOfAccess();
-	avgAccTime = (L1.gettime() + L2.gettime() + time_mem) / (L1.getnumOfAccess() + L2.getnumOfAccess() + mem_access);//maybe without mem_access
+
+	avgAccTime = (L1.gettime() + L2.gettime() + time_mem) / (double)instructions;//maybe without mem_access
+	
 
 	printf("L1miss=%.03f ", L1MissRate);
 	printf("L2miss=%.03f ", L2MissRate);
